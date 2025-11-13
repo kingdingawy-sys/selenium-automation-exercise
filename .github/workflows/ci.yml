@@ -39,4 +39,4 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest -v --html=reports/report.html --self-contained-html
+          pytest -v --tb=short --disable-warnings --html=reports/report.html --self-contained-html
