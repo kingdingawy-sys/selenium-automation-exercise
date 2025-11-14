@@ -3,10 +3,9 @@ from selenium import webdriver
 from pages.ProductPage import ProductPage
 from pages.CartPage import CartPage
 
-@pytest.mark.usefixtures("setup")
 class TestCart:
-    def test_cart_items_count_increases(self, setup):
-        driver = setup
+    def test_cart_items_count_increases(self, driver):  # ← غيرت "setup" إلى "driver"
+        # driver = setup  # ← نحذف السطر دا
         product_page = ProductPage(driver)
         cart_page = CartPage(driver)
 
