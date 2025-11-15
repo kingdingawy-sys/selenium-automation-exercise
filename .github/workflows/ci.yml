@@ -22,27 +22,16 @@ jobs:
       - name: Install system deps (Chrome)
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget gnupg2 ca-certificates
-
-          # Add Google Chrome signing key (NEW SECURE METHOD)
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub \
-            | sudo tee /usr/share/keyrings/google-linux-signing-key.gpg > /dev/null
-
-          # Add Chrome repository
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-key.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
-            | sudo tee /etc/apt/sources.list.d/google-chrome.list
-
+          sudo apt-get install -y wget gnupg2
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then 
-            pip install -r requirements.txt
-          else 
-            pip install pytest selenium webdriver-manager pytest-html; 
-          fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest selenium webdriver-manager pytest-html; fi
 
       - name: Prepare reports folder
         run: |
@@ -51,3 +40,45 @@ jobs:
       - name: Run tests
         run: |
           pytest -v --tb=short --disable-warnings --html=reports/report.html --self-contained-html
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # Install Firefox + Geckodriver
+      - name: Install Firefox and Geckodriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y firefox-esr
+          GECKO_VERSION=$(curl -s https://api.github.com/repos/mozilla/geckodriver/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+          wget -q https://github.com/mozilla/geckodriver/releases/download/$GECKO_VERSION/geckodriver-$GECKO_VERSION-linux64.tar.gz
+          tar -xzf geckodriver-*.tar.gz
+          sudo mv geckodriver /usr/local/bin/
+          geckodriver --version
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Prepare reports folder
+        run: mkdir -p reports/screenshots
+
+      - name: Run tests
+        run: pytest -v --tb=short --disable-warnings --html=reports/report.html --self-contained-html

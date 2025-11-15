@@ -1,20 +1,23 @@
-from selenium import webdriver
-#from selenium.webdriver.chrome.service import Service
+#from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import pytest
 import os
 from datetime import datetime, UTC
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium import webdriver
+
 
 @pytest.fixture
 def driver():
     options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--headless")
+    options.add_argument("--width=1920")
+    options.add_argument("--height=1080")
 
-    driver = webdriver.Chrome(options=options)
+    service = Service()
+    driver = webdriver.Firefox(service=service, options=options)
     yield driver
     driver.quit()
 
